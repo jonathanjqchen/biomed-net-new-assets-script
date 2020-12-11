@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import xlsxwriter
 
 pd.set_option("display.expand_frame_repr", False)
 
@@ -55,6 +56,58 @@ def create_dict(df):
     return assets_dict
 
 
+def update_count(new_assets_dict, retired_assets_dict):
+    """
+    Iterates through each asset in new_assets_dict and decreases its "Count" if there is a corresponding asset in the
+    retired_assets_dict. After "Count" is updated, the corresponding asset is removed from retired_assets_dict.
+    :param: New_assets_dict: Dictionary containing newly accepted assets
+    :param: Retired_assets_dict: Dictionary containing retired assets
+    :return: Nothing
+    """
+
+    # Iterate through each entry in the new assets dictionary
+    for key, val in new_assets_dict.items():
+        # Check to see if the new model purchased was also retired
+        if key in retired_assets_dict:
+            # Find the exact asset match by iterating through the dictionary value (2D list of asset details)
+            for retired_asset in retired_assets_dict.get(key):
+                for new_asset in new_assets_dict.get(key):
+                    # Index 1 gives asset description, index 2 gives site, and index 3 gives shop code
+                    if new_asset[1] == retired_asset[1] and \
+                            new_asset[2] == retired_asset[2] and \
+                            new_asset[3] == retired_asset[3]:
+                        # Decrease new asset "Count" by retired asset "Count" (add since retired asset "Count" is neg)
+                        new_asset[5] += retired_asset[5]
+                        # Remove retired asset from retired_assets_dict after count in new_assets_dict has been updated
+                        retired_assets_dict.get(key).remove(retired_asset)
+                # Delete key from retired_assets_dict if there are no more assets in its 2D list
+                if len(retired_assets_dict.get(key)) == 0:
+                    del retired_assets_dict[key]
+
+
+def merge_dict(new_assets_dict, retired_assets_dict):
+    """
+    Merges retired_assets_dict into new_assets_dict
+    :param new_assets_dict: Dictionary containing new assets with updated "Count"
+    :param retired_assets_dict: Dictionary containing retired assets that were not replaced by an asset in
+           new_assets_dict
+    :return: Nothing
+    """
+
+    # If retired_assets_dict isn't empty, merge it with new_assets_dict
+    if len(retired_assets_dict) > 0:
+        for key, val in retired_assets_dict.items():
+            if key not in new_assets_dict:
+                new_assets_dict[key] = val
+            else:
+                for li in val:
+                    new_assets_dict.get(key).append(li)
+
+
+def write_to_excel(dict):
+    pass
+
+
 def main():
 
     # Get name of TMS exports of new and retired assets
@@ -76,39 +129,14 @@ def main():
     new_assets_dict = create_dict(new_assets_df)
     retired_assets_dict = create_dict(retired_assets_df)
 
-    print(new_assets_dict.get("692"))
-    print(retired_assets_dict.get("692"))
+    # If there is an exact asset match between the two dicts, decrease new assets count by retired assets count
+    update_count(new_assets_dict, retired_assets_dict)
 
-    # Iterate through each entry in the new assets dictionary
-    for key, val in new_assets_dict.items():
-        # Check to see if the new model purchased was also retired
-        if key in retired_assets_dict:
-            for retired_asset in retired_assets_dict.get(key):
-                for new_asset in new_assets_dict.get(key):
-                    # Index 1 gives asset description, index 2 gives site, and index 3 gives shop code
-                    if new_asset[1] == retired_asset[1] and \
-                            new_asset[2] == retired_asset[2] and \
-                            new_asset[3] == retired_asset[3]:
-                        # Add because retired_assets_dict contains negative "Count" values
-                        new_asset[5] += retired_asset[5]
-                        # Remove retired asset from retired_assets_dict after count in new_assets_dict has been updated
-                        retired_assets_dict.get(key).remove(retired_asset)
-                # Delete key from retired_assets_dict if there are no more assets in its 2D list
-                if len(retired_assets_dict.get(key)) == 0:
-                    del retired_assets_dict[key]
+    # Merge retired assets dict into new_assets_dict
+    merge_dict(new_assets_dict, retired_assets_dict)
 
-    # If retired_assets_dict isn't empty, merge it with new_assets_dict
-    if len(retired_assets_dict) > 0:
-        for key, val in retired_assets_dict.items():
-            if key not in new_assets_dict:
-                new_assets_dict[key] = val
-            else:
-                for li in val:
-                    new_assets_dict.get(key).append(li)
-
-    print("======================Post Processing======================")
-    print(new_assets_dict.get("692"))
-    print(retired_assets_dict.get("692"))
+    # Write new_assets_dict to Excel
+    write_to_excel(new_assets_dict)
 
 
 if __name__ == "__main__":
