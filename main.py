@@ -62,7 +62,7 @@ def update_count(new_assets_dict, retired_assets_dict):
     retired_assets_dict. After "Count" is updated, the corresponding asset is removed from retired_assets_dict.
     :param: New_assets_dict: Dictionary containing newly accepted assets
     :param: Retired_assets_dict: Dictionary containing retired assets
-    :return: Nothing
+    :return: None
     """
 
     # Iterate through each entry in the new assets dictionary
@@ -91,7 +91,7 @@ def merge_dict(new_assets_dict, retired_assets_dict):
     :param new_assets_dict: Dictionary containing new assets with updated "Count"
     :param retired_assets_dict: Dictionary containing retired assets that were not replaced by an asset in
            new_assets_dict
-    :return: Nothing
+    :return: None
     """
 
     # If retired_assets_dict isn't empty, merge it with new_assets_dict
@@ -104,8 +104,51 @@ def merge_dict(new_assets_dict, retired_assets_dict):
                     new_assets_dict.get(key).append(li)
 
 
-def write_to_excel(dict):
-    pass
+def write_to_excel(dic):
+    """
+    Writes given dictionary to Excel in format that can be accepted by cost model
+    :param dic: Dict containing information about new and retired assets
+    :return: None
+    """
+
+    # Initialization
+    net_new_file_path = r"{dir_path}\output\net_new_assets.xlsx".format(dir_path=os.getcwd())
+    workbook = xlsxwriter.Workbook(net_new_file_path)
+    worksheet = workbook.add_worksheet("Net New Assets")
+
+    # Formatting
+    heading = workbook.add_format({"bold": True, "font_color": "white", "bg_color": "#244062"})
+
+    # Write headers
+    headers = ["model_num", "asset_description", "quantity", "health_auth", "site_code", "shop_code"]
+    worksheet.write_row(0, 0, headers, heading)
+
+    # Write asset details
+    row = 1
+    col = 0
+
+    for key, val in dic.items():
+
+        for asset_list in val:
+
+            row_data = [asset_list[0],   # model_num
+                        asset_list[1],   # asset_description
+                        asset_list[5],   # quantity
+                        asset_list[4],   # health_auth
+                        asset_list[2],   # site_code
+                        asset_list[3]]   # shop_code
+
+            worksheet.write_row(row, col, row_data)
+            row += 1
+
+    # Set column width
+    worksheet.set_column(0, 0, 15)   # A: model_num
+    worksheet.set_column(1, 1, 70)   # B: asset_description
+    worksheet.set_column(2, 2, 10)   # C: quantity
+    worksheet.set_column(3, 3, 13)   # D: health_auth
+    worksheet.set_column(4, 5, 10)   # E, F: site_code, shop_code
+
+    workbook.close()
 
 
 def main():
@@ -132,7 +175,7 @@ def main():
     # If there is an exact asset match between the two dicts, decrease new assets count by retired assets count
     update_count(new_assets_dict, retired_assets_dict)
 
-    # Merge retired assets dict into new_assets_dict
+    # Merge retired assets dic into new_assets_dict
     merge_dict(new_assets_dict, retired_assets_dict)
 
     # Write new_assets_dict to Excel
