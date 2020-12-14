@@ -24,7 +24,8 @@ def add_count_col(df):
     """
     Groups given df by all fields and creates a new "Count" column indicating the number of assets in each group
     :param df: Dataframe containing asset details
-    :return: Dataframe with identical entries grouped and a "Count" field indicating the number of entries
+    :return: Dataframe with identical asset/model/site combination grouped in single row and new "Count" column
+             indicating the number of such assets
     """
 
     return df.\
@@ -37,16 +38,17 @@ def add_count_col(df):
 def create_dict(df):
     """
     Converts given dataframe into a dictionary; see :return: for dictionary details
-    :param df: Dataframe with asset details grouped into unique entries and a count of the # in each group
+    :param df: Dataframe with asset details and "Count" column
     :return: Dictionary with key: "Model Number"
                            value: [["Model Number", "Asset Description", ...], ["Model Number", ...], ...]
 
              Note: Value is a 2D list that contains unique entries for a given model number, if they exist
                    For example, model number "VC150" may have been purchased for two different sites "MSJ" and "SPH"
-                   In this case, there will be two entries in the 2D list stored at "VC150" in the dictionary
+                   In this case, there will be two entries in the 2D list stored at key "VC150" in the dictionary
     """
 
     assets_dict = {}
+
     for index, row in df.iterrows():
         if row["Model Number"] in assets_dict:
             assets_dict.get(row["Model Number"]).append(row.tolist())
@@ -60,14 +62,14 @@ def update_count(new_assets_dict, retired_assets_dict):
     """
     Iterates through each asset in new_assets_dict and decreases its "Count" if there is a corresponding asset in the
     retired_assets_dict. After "Count" is updated, the corresponding asset is removed from retired_assets_dict.
-    :param: New_assets_dict: Dictionary containing newly accepted assets
-    :param: Retired_assets_dict: Dictionary containing retired assets
+    :param: new_assets_dict: Dictionary containing newly accepted assets
+    :param: retired_assets_dict: Dictionary containing retired assets
     :return: None
     """
 
     # Iterate through each entry in the new assets dictionary
     for key, val in new_assets_dict.items():
-        # Check to see if the new model purchased was also retired
+        # Check to see if the newly purchased asset was also retired (key is model number)
         if key in retired_assets_dict:
             # Find the exact asset match by iterating through the dictionary value (2D list of asset details)
             for retired_asset in retired_assets_dict.get(key):
@@ -89,7 +91,7 @@ def merge_dict(new_assets_dict, retired_assets_dict):
     """
     Merges retired_assets_dict into new_assets_dict
     :param new_assets_dict: Dictionary containing new assets with updated "Count"
-    :param retired_assets_dict: Dictionary containing retired assets that were not replaced by an asset in
+    :param retired_assets_dict: Dictionary containing retired assets that did not have a corresponding asset in
            new_assets_dict
     :return: None
     """
@@ -100,14 +102,14 @@ def merge_dict(new_assets_dict, retired_assets_dict):
             if key not in new_assets_dict:
                 new_assets_dict[key] = val
             else:
-                for li in val:
-                    new_assets_dict.get(key).append(li)
+                for asset_list in val:
+                    new_assets_dict.get(key).append(asset_list)
 
 
-def write_to_excel(dic):
+def write_to_excel(new_assets_dict):
     """
-    Writes given dictionary to Excel in format that can be accepted by cost model
-    :param dic: Dict containing information about new and retired assets
+    Writes given dictionary to Excel in format that can be accepted by biomed-service-delivery-cost-model
+    :param new_assets_dict: Dict containing information about new and retired assets
     :return: None
     """
 
@@ -127,7 +129,7 @@ def write_to_excel(dic):
     row = 1
     col = 0
 
-    for key, val in dic.items():
+    for key, val in new_assets_dict.items():
 
         for asset_list in val:
 
@@ -161,21 +163,24 @@ def main():
     new_assets_df = read_assets(new_assets_path)
     retired_assets_df = read_assets(retired_assets_path)
 
-    # Group df by rows with perfect match, add count column indicating number of matching asset entries
+    # Group df by rows so that we have one row for each unique asset/model/site combination, add count column
     new_assets_df = add_count_col(new_assets_df)
     retired_assets_df = add_count_col(retired_assets_df)
 
-    # Converting all "Count" values in the retired df to a negative value
+    # Convert all "Count" values in the retired df to a negative value
     retired_assets_df["Count"] *= -1
 
-    # Convert df to dictionary with key: "Model Number" and value: [["Entry 1 details"], ["Entry 2 details"], ...]
+    # Convert df to dictionary with key: "Model Number" and value: [["Asset 1 details"], ["Asset 2 details"], ...]
+    # Note: Assets with same model but different sites are grouped separately, hence the 2D list
     new_assets_dict = create_dict(new_assets_df)
     retired_assets_dict = create_dict(retired_assets_df)
 
-    # If there is an exact asset match between the two dicts, decrease new assets count by retired assets count
+    # If there is an exact asset match between the two dicts, decrease new assets "Count" by retired assets "Count"
+    # After "Count" has been updated, retired asset is removed from its dictionary
+    # This will give us the count of net new assets at each site in new_assets_dict
     update_count(new_assets_dict, retired_assets_dict)
 
-    # Merge retired assets dic into new_assets_dict
+    # Merge retired_assets_dict (only retired assets without corresponding new asset remain) into new_assets_dict
     merge_dict(new_assets_dict, retired_assets_dict)
 
     # Write new_assets_dict to Excel
