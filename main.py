@@ -155,6 +155,8 @@ def write_to_excel(new_assets_dict):
 
 def main():
 
+    print("Generating list of net new assets...")
+
     # Get name of TMS exports of new and retired assets
     new_assets_path = "new_assets/{file}".format(file=os.listdir("new_assets")[0])
     retired_assets_path = "retired_assets/{file}".format(file=os.listdir("retired_assets")[0])
@@ -185,6 +187,8 @@ def main():
 
     # Write new_assets_dict to Excel
     write_to_excel(new_assets_dict)
+
+    input("Net new assets list successfully generated. Press 'Enter' to close this window.")
 
 
 if __name__ == "__main__":
