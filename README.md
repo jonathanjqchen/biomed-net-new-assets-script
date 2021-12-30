@@ -1,1 +1,38 @@
-# biomed-net-new-assets-script
+## Background
+This script determines the number of net new assets that Lower Mainland Biomedical Engineering (LMBME) receives and supports over a specified time period. It outputs a .xlsx file containing tabular data that can be used as input into the [LMBME service delivery cost model](https://github.com/jonathanjqchen/biomed-service-delivery-cost-model).
+
+## Implementation Details
+The script determines net new assets by taking the difference in quantity between new assets and retired assets for the same time period. It also takes into consideration the following:
+
+- Groups assets by model_num and site_code, which allows us for determination of net new assets for each site/cost centre
+- If an asset was retired but not replaced with a new asset of the same model at the same site, then it will show up in the final output with a negative quantity
+
+Below is a control flow diagram outlining the implementation logic:
+
+![net_new_script_control_flow](https://user-images.githubusercontent.com/54252001/147727900-23925879-6904-40c9-b72b-e7f3d136d259.png)
+
+## Usage
+To set up and use this project locally...
+
+1. Install pandas and XlsxWriter
+```
+$ pip install pandas
+$ pip install XlsxWriter
+```
+
+2. Clone the repo
+```
+$ git clone https://github.com/jonathanjqchen/biomed-net-new-assets-script.git
+```
+
+3. Follow the steps in ["README.pdf"](https://github.com/jonathanjqchen/biomed-net-new-assets-script/releases/tag/v1.0.0) on the releases page to export data on retired assets and new assets from TMS.
+
+4. Run main.py 
+```
+$ cd biomed-net-new-assets-script
+$ python main.py
+```
+
+5. Output will be in `./output/net_new_assets.xlsx`. There will be one worksheet that in the file that looks like this:
+
+![net_new_script_output](https://user-images.githubusercontent.com/54252001/147728265-226a23c5-93d4-483a-b665-a95e973ebadd.png)
