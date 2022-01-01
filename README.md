@@ -16,7 +16,7 @@ delivery cost model](https://github.com/jonathanjqchen/biomed-service-delivery-c
 The script determines net new assets by taking the difference in quantity between new assets and retired assets for the same time 
 period. It also takes into consideration the following:
 
-- Groups assets by model_num and site_code, which allows us for determination of net new assets for each site/cost centre
+- Groups assets by model_num and site_code, which allows for determination of net new assets for each site/cost centre
 - If an asset was retired but not replaced with a new asset of the same model at the same site, then it will show up in the final 
 output with a negative quantity
 
