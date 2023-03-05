@@ -22,7 +22,7 @@ output with a negative quantity
 
 Below is a control flow diagram outlining the implementation logic:
 
-![net_new_script_control_flow](https://user-images.githubusercontent.com/54252001/147727900-23925879-6904-40c9-b72b-e7f3d136d259.png)
+![net_new_script_control_flow](https://github.com/jonathanjqchen/biomed-net-new-assets-script/blob/main/Images/control-flow-diagram.jpg)
 
 <p align="right"><a href="#top">[Back to top]</a></p>
 
