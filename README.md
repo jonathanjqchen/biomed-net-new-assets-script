@@ -48,7 +48,7 @@ $ cd biomed-net-new-assets-script
 $ python main.py
 ```
 
-5. Output will be in `./output/net_new_assets.xlsx`. There will be one worksheet that in the file that looks like this:
+5. Output will be in `./output/net_new_assets.xlsx`. There will be one worksheet in the file that looks like this:
 
 ![net_new_script_output](https://user-images.githubusercontent.com/54252001/147728265-226a23c5-93d4-483a-b665-a95e973ebadd.png)
 
